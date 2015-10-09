@@ -16,8 +16,8 @@
 # the one installed on the build machine).
 # Please see README.md for a more detailed description.
 
-BASE_DIR  = $(CURDIR)
-SRC_DIR   = $(BASE_DIR)/consul
+BASE_DIR  = $(CURDIR)/pkg
+SRC_DIR   = $(BASE_DIR)/checkout/src/github.com/hashicorp/consul
 DISTRO   ?= $(shell lsb_release -sc)
 REVISION ?= 1~$(DISTRO)1~ppa1
 MODIFIER ?= 
