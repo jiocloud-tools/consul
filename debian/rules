@@ -13,7 +13,7 @@ override_dh_auto_clean:
 	rm -rf usr etc
 
 override_dh_auto_build:
-	export GOPATH=$(CURDIR) && $(MAKE) -C 
+	export GOPATH=$(CURDIR) && $(MAKE) -C .
 
 override_dh_auto_install:
 	mkdir -p usr/bin
