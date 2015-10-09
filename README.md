@@ -1,65 +1,161 @@
-# Consul [![Build Status](https://travis-ci.org/hashicorp/consul.png)](https://travis-ci.org/hashicorp/consul)
+# A debian package for Consul
 
-* Website: http://www.consul.io
-* IRC: `#consul` on Freenode
-* Mailing list: [Google Groups](https://groups.google.com/group/consul-tool/)
+## Overview
 
-Consul is a tool for service discovery and configuration. Consul is
-distributed, highly available, and extremely scalable.
+This project can be used to create a debian package for any tag in the
+[Consul](http://www.consul.io) git repository on github
+(https://github.com/hashicorp/consul). A simple
 
-Consul provides several key features:
+    $ make
 
-* **Service Discovery** - Consul makes it simple for services to register
-  themselves and to discover other services via a DNS or HTTP interface.
-  External services such as SaaS providers can be registered as well.
+will package the latest tag, but any other version tag can be specified using
+the `VERSION` variable, e.g.
 
-* **Health Checking** - Health Checking enables Consul to quickly alert
-  operators about any issues in a cluster. The integration with service
-  discovery prevents routing traffic to unhealthy hosts and enables service
-  level circuit breakers.
+    $ make VERSION=0.3.0
 
-* **Key/Value Storage** - A flexible key/value store enables storing
-  dynamic configuration, feature flagging, coordination, leader election and
-  more. The simple HTTP API makes it easy to use anywhere.
+Ubuntu packages built regularly with this Makefile are available at
+[this Launchpad PPA](https://launchpad.net/~bcandrea/+archive/ubuntu/consul). To
+install the latest Consul packages on your Ubuntu system you just need to add the
+repository and update the local sources:
 
-* **Multi-Datacenter** - Consul is built to be datacenter aware, and can
-  support any number of regions without complex configuration.
+    $ sudo apt-add-repository ppa:bcandrea/consul
+    $ sudo apt-get update
+    $ sudo apt-get install consul consul-web-ui
 
-Consul runs on Linux, Mac OS X, and Windows. It is recommended to run the
-Consul servers only on Linux, however.
 
-## Quick Start
+## Usage
 
-An extensive quick quick start is viewable on the Consul website:
+The simplest usage of the Makefile is, of course,
 
-http://www.consul.io/intro/getting-started/install.html
+    $ make
 
-## Documentation
+It has the (perhaps obvious) effect of cloning the consul git repo locally, checking
+out the latest version tag, and building a binary .deb package out of it. Two packages,
+actually: the main `consul` package containing the binary and the `consul-web-ui` package
+providing the web interface to the cluster of nodes.
 
-Full, comprehensive documentation is viewable on the Consul website:
+The available targets are:
 
-http://www.consul.io/docs
+* `build`: The default target. Builds binary and source packages.
+* `build_src`: Builds a source debian package that can be used for uploads to Launchpad.
+* `upload`: Uploads the source package to Launchpad. Requires setting the `PPA` variable on
+            the command line (e.g. `make upload PPA=myuser/myppa`).
+* `clean`: Removes everything under `pkg`.
 
-## Developing Consul
+As already mentioned, the `VERSION` variable is the easiest way to go back in time
+and produce a package for a different tag:
 
-If you wish to work on Consul itself, you'll first need [Go](http://golang.org)
-installed (version 1.2+ is _required_). Make sure you have Go properly installed,
-including setting up your [GOPATH](http://golang.org/doc/code.html#GOPATH).
+    $ make VERSION=0.3.0
 
-Next, clone this repository into `$GOPATH/src/github.com/hashicorp/consul` and
-then just type `make`. In a few moments, you'll have a working `consul` executable:
+Several other variables are available: for instance,
 
-```
-$ go get -u ./...
-$ make
-...
-$ bin/consul
-...
-```
+    $ make CHANGE="No-change build for Trusty." DISTRO=trusty
 
-*note: `make` will also place a copy of the binary in the first part of your $GOPATH*
+can be used to change the target distribution (which defaults to
+the one installed on the build machine), using a custom changelog message.
+Here is the complete list:
 
-You can run tests by typing `make test`.
 
-If you make any changes to the code, run `make format` in order to automatically
-format the code according to Go standards.
+* `DISTRO`: Select the target codename for the build (e.g. precise, natty).
+            Defaults to the codename of the build machine.
+* `VERSION`: Select which release tag to use as a base for the upstream
+             tarball. If not specified, the latest tag will be used.
+* `MODIFIER`: An optional modifier to append to the selected upstream version (e.g.
+              "~beta1"). Not needed in most circumstances.
+* `REVISION`: The debian revision to append to the upstream version. Defaults
+              to `1~$(DISTRO)1~ppa1`.
+* `CHANGE`: The message to use in the debian/changelog file for this package.
+            Defaults to "New upstream release".
+* `PBUILDER`: Allows to select an executable different from cowbuilder to
+              produce the binary package.
+* `PBUILDER_BASE`: Allows to specify a custom path for the cowbuilder/pbuilder base
+                   image. Defaults to `$HOME/pbuilder/$(DISTRO)-base.cow`.
+* `PPA`: Variable needed when uploading the package to Launchpad.
+         Example: `make upload PPA=myuser/myppa`.
+
+## Building for multiple distros
+
+Uploads to Launchpad only include the upstream tarball once. This means that, when
+building the package for multiple distros, you should never run `make clean` between `make`
+commands. That would delete and recreate the upstream tarball, making subsequent Launchpad uploads fail.
+
+For example, the following sequence might be used to build the latest version for precise, trusty and
+utopic:
+
+    make clean
+    make DISTRO=precise
+    make DISTRO=trusty CHANGE="No-change build for Trusty."
+    make DISTRO=utopic CHANGE="No-change build for Utopic."
+    make upload DISTRO=precise PPA=myuser/myppa
+    make upload DISTRO=trusty PPA=myuser/myppa
+    make upload DISTRO=utopic PPA=myuser/myppa
+
+## Prerequisites
+
+The build machine must meet a set of requirements to be able to
+run the Makefile. In particular it needs:
+
+* a suitable environment for building debian packages (pbuilder/cowbuilder)
+* a relatively recent Ruby runtime, with the `sass` and `uglifier` gems installed
+
+Without trying to cover all the possible cases, I will describe the steps needed on a
+(quite old) Ubuntu 12.04 system.
+
+### Setting up cowbuilder
+
+First install the packages:
+
+    $ sudo apt-get install cowbuilder ubuntu-dev-tools
+
+Then create the base folder which will be used to setup the chrooted
+environment in which the package will be built:
+
+    $ mkdir -p ~/pbuilder/
+    $ sudo cowbuilder --create --distribution precise \
+                      --components "main restricted universe multiverse" \
+                      --basepath=$HOME/pbuilder/precise-base.cow
+
+If you have more than one PGP key in your local keyring (I do),
+you may also want to specify which one to use when signing
+packages. Just list your keys with `gpg --list-keys`, and copy
+the key id to `/etc/devscripts.conf` under the debsign stanza:
+
+    DEBSIGN_KEYID=FDCCCD6E
+
+Another problem to avoid: the personal package builders cowbuilder and
+pbuilder must be allowed to preserve the environment
+when called using `sudo`. Create the file `/etc/sudoers.d/pbuilders` using the command
+
+    $ sudo visudo -f /etc/sudoers.d/pbuilders
+
+and put the following two lines into it:
+
+    Cmnd_Alias PBUILDERS = /usr/sbin/pbuilder, /usr/sbin/cowbuilder
+    ALL ALL=(ALL) SETENV: PBUILDERS
+
+The last issue is the dependency from a relatively recent version of Go. This is
+not a problem on Trusty (14.04), but for Precise the package needs to be fetched from
+a PPA. This can be done easily by logging into the cowbuilder image with
+
+    $ sudo cowbuilder --login --basepath ~/pbuilder/precise-base.cow/ --save-after-login
+
+and adding to the file `/etc/apt/sources.list` the following line:
+
+    deb http://ppa.launchpad.net/bcandrea/backports/ubuntu precise main
+
+The package index then needs to be updated with the command
+
+    # apt-get update
+
+The `--save-after-login` option will ensure our change will be committed to
+the cowbuilder image after logging off.
+
+### Setting up Ruby
+
+This should be as simple as
+
+    $ sudo apt-get install ruby1.9.1
+    $ sudo gem install sass uglifier
+
+You can of course use rbenv/rvm/anything else. YMMV.
+
