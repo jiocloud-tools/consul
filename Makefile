@@ -50,8 +50,8 @@ create_upstream_tarball: get_new_version
 	if [ ! -f pkg/consul_$(VERSION).orig.tar.gz ]; then \
 	  rm -rf $(PKG_DIR); \
 	  rsync -qav --delete $(BASE_DIR)/checkout/ $(PKG_DIR); \
-	  export GOPATH=$(PKG_DIR) && make -C $(PKG_DIR)/consul deps; \
-	  make -C $(PKG_DIR)/consul/ui dist; \
+	  export GOPATH=$(PKG_DIR) && make -C $(PKG_DIR)/src/github.com/hashicorp/consul deps; \
+	  make -C $(PKG_DIR)/src/github.com/hashicorp/consul/ui dist; \
 	  tar czf pkg/consul_$(VERSION).orig.tar.gz -C $(BASE_DIR) consul-$(VERSION); \
 	fi
 
