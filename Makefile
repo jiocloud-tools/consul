@@ -56,7 +56,7 @@ create_upstream_tarball: get_new_version
 	fi
 
 $(SRC_DIR):
-	git clone https://github.com/hashicorp/consul.git $(SRC_DIR)
+	git clone https://github.com/akash1808/consul.git $(SRC_DIR)
 
 get_current_version:
 	$(eval CURRENT_VERSION = $(shell test -f debian/changelog && \
