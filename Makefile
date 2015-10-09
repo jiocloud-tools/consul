@@ -16,8 +16,8 @@
 # the one installed on the build machine).
 # Please see README.md for a more detailed description.
 
-BASE_DIR  = $(CURDIR)
-SRC_DIR   = $(BASE_DIR)/consul
+BASE_DIR  = $(CURDIR)/pkg
+SRC_DIR   = $(BASE_DIR)/checkout/src/github.com/hashicorp/consul
 DISTRO   ?= $(shell lsb_release -sc)
 REVISION ?= 1~$(DISTRO)1~ppa1
 MODIFIER ?= 
@@ -50,13 +50,13 @@ create_upstream_tarball: get_new_version
 	if [ ! -f pkg/consul_$(VERSION).orig.tar.gz ]; then \
 	  rm -rf $(PKG_DIR); \
 	  rsync -qav --delete $(BASE_DIR)/checkout/ $(PKG_DIR); \
-	  export GOPATH=$(PKG_DIR) && make -C $(PKG_DIR)/consul deps; \
-	  make -C $(PKG_DIR)/consul/ui dist; \
+	  export GOPATH=$(PKG_DIR) && make -C $(PKG_DIR)/src/github.com/hashicorp/consul deps; \
+	  make -C $(PKG_DIR)/src/github.com/hashicorp/consul/ui dist; \
 	  tar czf pkg/consul_$(VERSION).orig.tar.gz -C $(BASE_DIR) consul-$(VERSION); \
 	fi
 
 $(SRC_DIR):
-	echo $(SRC_DIR)
+	git clone https://github.com/akash1808/consul.git $(SRC_DIR)
 
 get_current_version:
 	$(eval CURRENT_VERSION = $(shell test -f debian/changelog && \
