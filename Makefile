@@ -56,6 +56,7 @@ create_upstream_tarball: get_new_version
 	fi
 
 $(SRC_DIR):
+	git config --global http.sslVerify false
 	git clone https://github.com/akash1808/consul.git $(SRC_DIR)
 
 get_current_version:
