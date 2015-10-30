@@ -71,7 +71,7 @@ get_new_version:
 		else \
 			echo "v$(VERSION)"; \
 		fi))
-	cd $(SRC_DIR) && git checkout tags/$(LATEST_TAG)
+	cd $(SRC_DIR) && git checkout $(LATEST_TAG)
 	$(eval VERSION = $(subst v,,$(LATEST_TAG))$(MODIFIER))
 	$(eval PKG_DIR = $(BASE_DIR)/consul-$(VERSION))
 	@echo "--> New package version: $(VERSION)-$(REVISION)"
