@@ -46,7 +46,7 @@ prepare_src: $(SRC_DIR) get_current_version create_upstream_tarball
         --controlmaint \
         $(CHANGE) || exit 0
 
-create_upstream_tarball: get_new_version
+create_upstream_tarball: get_current_version
 	if [ ! -f pkg/consul_$(VERSION).orig.tar.gz ]; then \
 	  rm -rf $(PKG_DIR); \
 	  rsync -qav --delete $(BASE_DIR)/checkout/ $(PKG_DIR); \
@@ -79,7 +79,7 @@ get_new_version:
 clean:
 	rm -rf pkg/*
 
-upload: get_new_version
+upload: 
 	@if test -z "$(PPA)"; then echo "Usage: make upload PPA=<user>/<ppa>"; exit 1; fi
 	dput -f ppa:$(PPA) $(BASE_DIR)/consul_$(VERSION)-$(REVISION)_source.changes
 	cp $(BASE_DIR)/consul-$(VERSION)/debian/changelog debian
