@@ -62,6 +62,7 @@ $(SRC_DIR):
 get_current_version:
 	$(eval CURRENT_VERSION = $(shell test -f debian/changelog && \
 		dpkg-parsechangelog | grep Version | awk '{print $$2}'))
+	$(eval VERSION = $(VERSION))
 	@echo "--> Current package version: $(CURRENT_VERSION)"
 	
 get_new_version:
